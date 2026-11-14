@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/styles.css?v=ui-20261114-b">
 </head>
 <body>
   <div class="page-glow page-glow-one" aria-hidden="true"></div>
@@ -33,20 +33,20 @@
       <div class="hero-copy">
         <div class="eyebrow"><span class="eyebrow-pulse"></span> A SIMPLE WAY TO SAVE</div>
         <h1 id="hero-title">Your Reels.<br><span>Your collection.</span></h1>
-        <p class="hero-description">Collect the public Instagram Reels you want to keep. Add several links, then download the successful videos together in one tidy ZIP bundle.</p>
+        <p class="hero-description">Save public Instagram Reels one at a time or in batches. One link downloads as a video; multiple links are collected into one tidy ZIP.</p>
 
         <div class="hero-points">
           <div class="hero-point">
             <span class="point-icon point-purple" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
             </span>
-            <span><strong>Batch it</strong><small>Up to 10 links at once</small></span>
+            <span><strong>Single or batch</strong><small>Download one video or up to 10 links</small></span>
           </div>
           <div class="hero-point">
             <span class="point-icon point-mint" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 4v11m-4-4 4 4 4-4M5 19h14"/></svg>
             </span>
-            <span><strong>Bundle it</strong><small>One ZIP for your downloads</small></span>
+            <span><strong>Choose your format</strong><small>Direct video or one ZIP bundle</small></span>
           </div>
         </div>
 
@@ -60,15 +60,15 @@
         <div class="card-topline">
           <div>
             <div class="card-kicker">YOUR DOWNLOAD QUEUE</div>
-            <h2 id="download-title">Build your bundle</h2>
+            <h2 id="download-title">Add your Reels</h2>
           </div>
-          <span class="card-badge"><span></span> Ready when you are</span>
+          <span class="card-badge" id="queue-state" data-state="empty"><span></span> Waiting for links</span>
         </div>
 
         <label for="reel-urls">Instagram Reel links</label>
         <div class="multi-input-wrap">
           <svg class="link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13.5a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7M14 10.5a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7"/></svg>
-          <textarea id="reel-urls" rows="5" placeholder="Paste your Instagram links here&#10;One link on each line&#10;&#10;https://www.instagram.com/reel/..." spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="link-help"></textarea>
+          <textarea id="reel-urls" rows="5" placeholder="Paste one or more Instagram links&#10;One link on each line&#10;&#10;https://www.instagram.com/reel/..." spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="link-help"></textarea>
           <button class="paste-btn" id="paste-btn" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="7" width="11" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h2"/></svg>
             Paste
@@ -78,6 +78,10 @@
           <span id="link-help">One link per line · Maximum 10 links</span>
           <span id="link-counter" class="link-counter">0 / 10 links</span>
         </div>
+        <div class="download-guidance" aria-live="polite">
+          <span class="guidance-mark" aria-hidden="true">✦</span>
+          <span id="download-guidance-text">One link saves as a video. Add multiple links for a ZIP bundle.</span>
+        </div>
 
         <button class="download-btn" id="download-btn" type="button">
           <span>Download Video</span>
@@ -86,7 +90,7 @@
         <div class="status" id="status" role="status" aria-live="polite"></div>
         <div class="card-foot">
           <span class="foot-shield" aria-hidden="true">✓</span>
-          Your links are processed when you submit the batch
+          Nothing downloads until you click the button
         </div>
       </section>
     </section>
@@ -134,6 +138,6 @@
     <span class="footer-copy">© <span id="year"></span> ReelGrabber</span>
   </footer>
 
-  <script src="/static/app.js?v=70bd15e"></script>
+  <script src="/static/app.js?v=ui-20261114-b"></script>
 </body>
 </html>

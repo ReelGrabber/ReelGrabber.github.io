@@ -4,6 +4,8 @@ const downloadBtn = document.getElementById("download-btn");
 const pasteBtn = document.getElementById("paste-btn");
 const statusBox = document.getElementById("status");
 const linkCounter = document.getElementById("link-counter");
+const queueState = document.getElementById("queue-state");
+const guidanceText = document.getElementById("download-guidance-text");
 const MAX_LINKS = 10;
 
 document.getElementById("year").textContent = new Date().getFullYear();
@@ -20,9 +22,26 @@ function updateLinkCounter() {
   linkCounter.textContent = `${count} / ${MAX_LINKS} links`;
   linkCounter.classList.toggle("over-limit", count > MAX_LINKS);
 
+  if (count > MAX_LINKS) {
+    queueState.dataset.state = "limit";
+    queueState.lastChild.textContent = " Link limit exceeded";
+    guidanceText.textContent = `Please remove ${count - MAX_LINKS} link${count - MAX_LINKS === 1 ? "" : "s"}. A maximum of ${MAX_LINKS} links is allowed.`;
+  } else if (count === 1) {
+    queueState.dataset.state = "single";
+    queueState.lastChild.textContent = " 1 video ready";
+    guidanceText.textContent = "Single download · Your video will be saved as an individual file.";
+  } else if (count > 1) {
+    queueState.dataset.state = "batch";
+    queueState.lastChild.textContent = ` ${count} videos ready`;
+    guidanceText.textContent = `Batch download · ${count} videos will be collected into one ZIP bundle.`;
+  } else {
+    queueState.dataset.state = "empty";
+    queueState.lastChild.textContent = " Waiting for links";
+    guidanceText.textContent = "One link saves as a video. Add multiple links for a ZIP bundle.";
+  }
+
   if (!downloadBtn.disabled) {
-    downloadBtn.querySelector("span").textContent =
-      count > 1 ? "Download ZIP Bundle" : "Download Video";
+    downloadBtn.querySelector("span").textContent = count > 1 ? "Download ZIP Bundle" : "Download Video";
   }
 }
 
@@ -63,7 +82,9 @@ async function downloadBatch() {
 
   downloadBtn.disabled = true;
   downloadBtn.querySelector("span").textContent = urls.length === 1 ? "Preparing video…" : "Preparing ZIP bundle…";
-  setStatus(urls.length === 1 ? "Preparing your video. Keep this tab open..." : `Processing ${urls.length} links one by one. Preparing your ZIP bundle...`);
+  setStatus(urls.length === 1
+    ? "Preparing your video. Keep this tab open…"
+    : `Processing ${urls.length} links one by one. Preparing your ZIP bundle…`);
 
   try {
     const response = await fetch(`${API_BASE}/api/download`, {
@@ -76,14 +97,18 @@ async function downloadBatch() {
     if (!response.ok || contentType.includes("application/json")) {
       const data = await response.json().catch(() => ({}));
       const failures = Array.isArray(data.failures) ? ` ${data.failures.join(" | ")}` : "";
-      throw new Error((data.error || "The download bundle could not be created.") + failures);
+      throw new Error((data.error || "The download could not be created.") + failures);
     }
 
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
     const disposition = response.headers.get("content-disposition") || "";
-    const fileMatch = disposition.match(/filename="?([^";]+)"?/i);
-    const filename = fileMatch ? fileMatch[1] : "ReelGrabber-downloads.zip";
+    const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+    const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+    const filename = utf8Match
+      ? decodeURIComponent(utf8Match[1])
+      : (plainMatch ? plainMatch[1] : (urls.length === 1 ? "ReelGrabber-video" : "ReelGrabber-downloads.zip"));
+
     const anchor = document.createElement("a");
     anchor.href = objectUrl;
     anchor.download = filename;
@@ -92,17 +117,16 @@ async function downloadBatch() {
     anchor.remove();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
 
-    const succeeded = response.headers.get("X-ReelGrabber-Success-Count") || urls.length;
-    const total = response.headers.get("X-ReelGrabber-Total-Count") || urls.length;
-    const failed = Number(total) - Number(succeeded);
+    const succeeded = Number(response.headers.get("X-ReelGrabber-Success-Count") || urls.length);
+    const total = Number(response.headers.get("X-ReelGrabber-Total-Count") || urls.length);
+    const failed = total - succeeded;
+
     if (urls.length === 1) {
       setStatus("Video downloaded successfully.");
+    } else if (failed > 0) {
+      setStatus(`ZIP downloaded: ${succeeded} of ${total} videos succeeded. See the report inside the ZIP.`);
     } else {
-      setStatus(
-        failed > 0
-          ? `ZIP bundle downloaded: ${succeeded} of ${total} videos succeeded. Details for failed links are inside the ZIP report.`
-          : `ZIP bundle downloaded successfully with ${succeeded} videos.`
-      );
+      setStatus(`ZIP bundle downloaded successfully with ${succeeded} videos.`);
     }
   } catch (error) {
     setStatus(error.message || "Something went wrong. Try again with public Instagram links you are allowed to download.", "error");
@@ -112,16 +136,12 @@ async function downloadBatch() {
   }
 }
 
+// Downloads start only from an intentional click on the download button.
 downloadBtn.addEventListener("click", downloadBatch);
 input.addEventListener("input", () => {
   updateLinkCounter();
   if (statusBox.textContent) setStatus("");
 });
-input.addEventListener("keydown", event => {
-  if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-    event.preventDefault();
-    downloadBatch();
-  }
-});
 
+// Intentionally no Enter/Ctrl+Enter download shortcut: Enter only inserts a newline.
 updateLinkCounter();
