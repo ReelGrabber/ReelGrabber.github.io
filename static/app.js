@@ -19,6 +19,11 @@ function updateLinkCounter() {
   const count = getLinks().length;
   linkCounter.textContent = `${count} / ${MAX_LINKS} links`;
   linkCounter.classList.toggle("over-limit", count > MAX_LINKS);
+
+  if (!downloadBtn.disabled) {
+    downloadBtn.querySelector("span").textContent =
+      count > 1 ? "Download ZIP Bundle" : "Download Video";
+  }
 }
 
 function setStatus(message, type = "") {
@@ -57,8 +62,8 @@ async function downloadBatch() {
   }
 
   downloadBtn.disabled = true;
-  downloadBtn.querySelector("span").textContent = "Preparing ZIP bundle…";
-  setStatus(`Processing ${urls.length} link${urls.length === 1 ? "" : "s"} one by one. Keep this tab open while the ZIP bundle is prepared.`);
+  downloadBtn.querySelector("span").textContent = urls.length === 1 ? "Preparing video…" : "Preparing ZIP bundle…";
+  setStatus(urls.length === 1 ? "Preparing your video. Keep this tab open..." : `Processing ${urls.length} links one by one. Preparing your ZIP bundle...`);
 
   try {
     const response = await fetch(`${API_BASE}/api/download`, {
@@ -90,16 +95,20 @@ async function downloadBatch() {
     const succeeded = response.headers.get("X-ReelGrabber-Success-Count") || urls.length;
     const total = response.headers.get("X-ReelGrabber-Total-Count") || urls.length;
     const failed = Number(total) - Number(succeeded);
-    setStatus(
-      failed > 0
-        ? `ZIP bundle downloaded: ${succeeded} of ${total} videos succeeded. Details for failed links are inside the ZIP report.`
-        : `ZIP bundle downloaded successfully with ${succeeded} video${Number(succeeded) === 1 ? "" : "s"}.`
-    );
+    if (urls.length === 1) {
+      setStatus("Video downloaded successfully.");
+    } else {
+      setStatus(
+        failed > 0
+          ? `ZIP bundle downloaded: ${succeeded} of ${total} videos succeeded. Details for failed links are inside the ZIP report.`
+          : `ZIP bundle downloaded successfully with ${succeeded} videos.`
+      );
+    }
   } catch (error) {
     setStatus(error.message || "Something went wrong. Try again with public Instagram links you are allowed to download.", "error");
   } finally {
     downloadBtn.disabled = false;
-    downloadBtn.querySelector("span").textContent = "Download ZIP bundle";
+    updateLinkCounter();
   }
 }
 
